@@ -1,0 +1,20 @@
+{
+  "name": "lesson02",
+  "version": "1.0.0",
+  "main": "index.js",
+  "bin" :{
+    "seif-cli" : "./index.js"
+  },
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Seif Elboghdady",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "commander": "^14.0.1",
+    "inquirer": "^12.9.6"
+  }
+
+}
