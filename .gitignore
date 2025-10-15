@@ -1,4 +1,4 @@
-/lesson02/node_modules
+*node_modules
 *.pdf
 test.py
 /lesson02/data.json

@@ -39,3 +39,4 @@ The data should be saved in `employees.json` with this format:
 
 **Note:** Please implement the solution without providing the actual code implementation.
 
+[solution01](./sol01.md)
