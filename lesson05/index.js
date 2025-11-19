@@ -1,8 +1,11 @@
 const express = require('express');
-const {courses} = require('./Data/data')
-const {body, validationResult} = require('express-validator')
+//const courseControler = require('./Controls/index.controler')
+//const {body, validationResult} = require('express-validator')
+//const {courses} = require('./Data/data')
+const router = require('./Routes/course.routes')
 const app = express();
 app.use(express.json())
+app.use('/api/courses',router)
 //Now we ues arr but use database in next session
 //this will move into folder <data> to apply concept Design pattern
 /*
@@ -29,13 +32,23 @@ const courses = [
   { id: 20, title: 'Data Science', coach: 'Omar' }
 ];
 */
-
+/*
 // Get all Courses
-app.get('/api/courses', );
+app.get('/api/courses',courseControler.getCourses );
 
 //Get Single Course
-app.get('/api/courses/:courseid',)
+app.get('/api/courses/:courseid',courseControler.getCourse);
+// this is validaton with express validator 
+app.post('/api/courses',[
+    body('title')
+        .notEmpty()
+        .withMessage('Title is Required')
+        .isLength({min:2})
+        .withMessage('Title at least 2')], courseControler.addCourse)
 
+//update 
+app.patch('/api/courses/:id',courseControler.updateCourse)
+*/
 // app.post('/api/courses',notEmpty(),(req, res)=>{
 //     // console.log(req.body)
 //     courses.push({id : courses.length+1, title : req.body.title, coach : req.body.coach})
@@ -53,16 +66,8 @@ app.post('/api/courses',(req, res)=>{
 })
 */
 
-// this is validaton with express validator 
-app.post('/api/courses',
-    body('title')
-        .notEmpty()
-        .withMessage('Title is Required')
-        .isLength({min:2})
-        .withMessage('Title at least 2'),)
 
-//update 
-app.patch('/api/courses/:id',)
+
 
 app.listen(4000, ()=>{
     console.log('The server is Turn on port 4000');
