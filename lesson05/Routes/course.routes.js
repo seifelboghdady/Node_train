@@ -17,5 +17,5 @@ router.post('/',[
 
 //update 
 router.patch('/:id',courseControler.updateCourse);
-
+router.delete('/:id', courseControler.deleteCourse);
 module.exports = router;

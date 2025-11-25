@@ -1,11 +1,18 @@
-const express = require('express');
 //const courseControler = require('./Controls/index.controler')
 //const {body, validationResult} = require('express-validator')
 //const {courses} = require('./Data/data')
+const mongoose = require('mongoose');
+const express = require('express');
 const router = require('./Routes/course.routes')
 const app = express();
 app.use(express.json())
 app.use('/api/courses',router)
+
+const url = "mongodb+srv://seifelboghdady_db_user:ArtRrWJnXOloeP1a@cluster0.747mnte.mongodb.net/?appName=Cluster0";
+mongoose.connect(url).then(console.log('Mongoose is Started'));
+
+//mongodb+srv://seifelboghdady_db_user:ArtRrWJnXOloeP1a@cluster0.747mnte.mongodb.net/?appName=Cluster0
+//mongodb+srv://seifelboghdady_db_user:ArtRrWJnXOloeP1a@cluster0.747mnte.mongodb.net/?appName=Cluster0
 //Now we ues arr but use database in next session
 //this will move into folder <data> to apply concept Design pattern
 /*
