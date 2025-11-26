@@ -3,19 +3,26 @@ const courseControler = require('../Controls/index.controler')
 const {Router}= require('express');
 const router = Router();
 
-router.get('/',courseControler.getCourses );
+
+router.route('/')
+    .get(courseControler.getCourses )
+    .post([
+            body('title')
+                .notEmpty()
+                .withMessage('Title is Required')
+                .isLength({min:2})
+                .withMessage('Title at least 2')
+            ],
+            courseControler.addCourse
+        );
 
 //Get Single Course
-router.get('/:courseid',courseControler.getCourse);
+router.route('/:courseid')
+    .get(courseControler.getCourse)
+    .patch(courseControler.updateCourse)
+    .delete(courseControler.deleteCourse);
 // this is validaton with express validator 
-router.post('/',[
-    body('title')
-        .notEmpty()
-        .withMessage('Title is Required')
-        .isLength({min:2})
-        .withMessage('Title at least 2')], courseControler.addCourse);
+
 
 //update 
-router.patch('/:id',courseControler.updateCourse);
-router.delete('/:id', courseControler.deleteCourse);
 module.exports = router;

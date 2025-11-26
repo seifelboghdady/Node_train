@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Courses</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f5f5;
+      margin: 0;
+      padding: 20px;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 30px;
+      color: #333;
+    }
+
+    .courses-container {
+      max-width: 900px;
+      margin: auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      grid-gap: 20px;
+    }
+
+    .course-card {
+      background: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.1);
+      transition: 0.3s;
+    }
+
+    .course-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 6px 14px rgba(0,0,0,0.15);
+    }
+
+    .title {
+      font-size: 20px;
+      font-weight: bold;
+      color: #333;
+      margin-bottom: 10px;
+    }
+
+    .price {
+      color: #007bff;
+      font-size: 18px;
+      margin-bottom: 10px;
+    }
+
+    .not-found {
+      margin-top: 40px;
+      text-align: center;
+      font-size: 18px;
+      color: #999;
+    }
+
+    #loading {
+      text-align: center;
+      font-size: 18px;
+      color: #555;
+      margin-top: 30px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <h1>Courses</h1>
+
+  <div id="loading">Loading courses...</div>
+
+  <div class="courses-container" id="courses"></div>
+
+  <p id="not-found" class="not-found" style="display: none;">No courses found</p>
+
+  <script>
+    async function loadCourses() {
+      const container = document.getElementById("courses");
+      const loading = document.getElementById("loading");
+      const notFound = document.getElementById("not-found");
+
+      try {
+        const res = await fetch("http://localhost:4000/api/courses");
+        const json = await res.json();
+
+        loading.style.display = "none";
+
+        // 🔥 هنا التعديل المهم
+        const courses = json?.data?.courses || [];
+
+        if (!courses.length) {
+          notFound.style.display = "block";
+          return;
+        }
+
+        courses.forEach(course => {
+          const card = document.createElement("div");
+          card.className = "course-card";
+
+          card.innerHTML = `
+            <div class="title">${course.title || "Untitled Course"}</div>
+            <div class="price">${course.price ? "$" + course.price : "No Price"}</div>
+            <div><b>ID:</b> ${course._id}</div>
+          `;
+
+          container.appendChild(card);
+        });
+
+      } catch (err) {
+        loading.innerText = "Error loading courses!";
+        console.error(err);
+      }
+    }
+
+    loadCourses();
+  </script>
+
+</body>
+</html>

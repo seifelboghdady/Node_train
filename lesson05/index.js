@@ -3,16 +3,22 @@
 //const {courses} = require('./Data/data')
 const mongoose = require('mongoose');
 const express = require('express');
-const router = require('./Routes/course.routes')
+require('dotenv').config()
+const cors = require('cors')
 const app = express();
+app.use(cors())
 app.use(express.json())
+const router = require('./Routes/course.routes')
 app.use('/api/courses',router)
 
-const url = "mongodb+srv://seifelboghdady_db_user:ArtRrWJnXOloeP1a@cluster0.747mnte.mongodb.net/?appName=Cluster0";
+
+const url = process.env.MONGO_URL ;
 mongoose.connect(url).then(console.log('Mongoose is Started'));
 
-//mongodb+srv://seifelboghdady_db_user:ArtRrWJnXOloeP1a@cluster0.747mnte.mongodb.net/?appName=Cluster0
-//mongodb+srv://seifelboghdady_db_user:ArtRrWJnXOloeP1a@cluster0.747mnte.mongodb.net/?appName=Cluster0
+// app.all('*', (req, res)=>{
+//     return res.status(404).json({status : 'success', message : 'Resource Not Found'});
+// });
+
 //Now we ues arr but use database in next session
 //this will move into folder <data> to apply concept Design pattern
 /*
