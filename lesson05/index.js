@@ -9,7 +9,9 @@ const app = express();
 app.use(cors())
 app.use(express.json())
 const router = require('./Routes/course.routes')
-app.use('/api/courses',router)
+app.use('/api/courses',router);
+const userRouter = require('./Routes/user.routes')
+app.use('/api/users',userRouter);
 
 
 const url = process.env.MONGO_URL ;

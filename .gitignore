@@ -2,3 +2,4 @@
 *.pdf
 test.py
 /lesson02/data.json
+.env

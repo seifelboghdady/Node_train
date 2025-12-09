@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Courses (Pagination)</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    :root{
+      --bg: #f5f7fb;
+      --card: #ffffff;
+      --muted: #6b7280;
+      --primary: #2563eb;
+      --accent: #06b6d4;
+      --shadow: rgba(16,24,40,0.08);
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      background:var(--bg);
+      color:#111827;
+      padding:28px;
+    }
+    .container{max-width:1100px;margin:0 auto}
+    header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+    h1{font-size:22px;margin:0}
+    .controls{display:flex;gap:10px;align-items:center}
+    input.search{
+      padding:8px 12px;border-radius:8px;border:1px solid #e6e9ef;background:#fff;
+      min-width:220px;outline:none;
+    }
+    select{padding:8px 10px;border-radius:8px;border:1px solid #e6e9ef;background:#fff}
+    .courses-grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fill,minmax(240px,1fr));
+      gap:16px;
+    }
+    .card{
+      background:var(--card);
+      border-radius:12px;
+      padding:16px;
+      box-shadow: 0 6px 18px var(--shadow);
+      transition: transform .18s ease, box-shadow .18s ease;
+    }
+    .card:hover{transform: translateY(-6px); box-shadow: 0 10px 30px rgba(16,24,40,0.12);}
+    .title{font-weight:600;margin-bottom:8px}
+    .price{color:var(--primary);font-weight:700;margin-bottom:8px}
+    .meta{font-size:13px;color:var(--muted)}
+    .pager{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      margin-top:18px;
+      margin-bottom:40px;
+    }
+    .btn{
+      padding:8px 12px;border-radius:8px;border:0;background:#fff;box-shadow:0 4px 12px rgba(16,24,40,0.06);cursor:pointer;
+    }
+    .btn.primary{background:var(--primary);color:#fff}
+    .btn:disabled{opacity:.45;cursor:not-allowed}
+    .page-num{padding:8px 12px;border-radius:8px;border:1px solid #e6e9ef;background:#fff;min-width:42px;text-align:center}
+    .footer-row{display:flex;justify-content:space-between;align-items:center;margin-top:14px;color:var(--muted);font-size:14px}
+    #loading{text-align:center;padding:28px;color:var(--muted)}
+    .no-results{text-align:center;padding:28px;color:var(--muted)}
+    @media (max-width:560px){
+      .controls{flex-direction:column;align-items:stretch}
+      input.search{width:100%}
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div>
+        <h1>Courses</h1>
+        <div style="color:var(--muted);font-size:13px;margin-top:6px">Simple listing with client-side pagination</div>
+      </div>
+
+      <div class="controls">
+        <input id="search" class="search" placeholder="Search by title..." />
+        <select id="perPage">
+          <option value="4">4 per page</option>
+          <option value="8" selected>8 per page</option>
+          <option value="12">12 per page</option>
+        </select>
+        <select id="sort">
+          <option value="newest" selected>Newest</option>
+          <option value="price-low">Price: Low → High</option>
+          <option value="price-high">Price: High → Low</option>
+        </select>
+        <button id="reload" class="btn" title="Reload from server">Reload</button>
+      </div>
+    </header>
+
+    <div id="loading">Loading courses…</div>
+    <div id="app" style="display:none">
+      <div class="courses-grid" id="grid"></div>
+
+      <div class="pager" id="pager">
+        <button id="prevBtn" class="btn">Prev</button>
+        <div id="pagesContainer" style="display:flex;gap:8px;align-items:center"></div>
+        <button id="nextBtn" class="btn">Next</button>
+      </div>
+
+      <div class="footer-row">
+        <div id="infoText"></div>
+        <div><small style="color:var(--muted)">Data from <code>/api/courses</code></small></div>
+      </div>
+    </div>
+
+    <div id="noResults" class="no-results" style="display:none">No courses found.</div>
+  </div>
+
+<script>
+(() => {
+  // State
+  let allCourses = [];
+  let filtered = [];
+  let currentPage = 1;
+  let perPage = Number(document.getElementById('perPage').value) || 8;
+  const grid = document.getElementById('grid');
+  const loadingEl = document.getElementById('loading');
+  const appEl = document.getElementById('app');
+  const noRes = document.getElementById('noResults');
+  const pagesContainer = document.getElementById('pagesContainer');
+  const prevBtn = document.getElementById('prevBtn');
+  const nextBtn = document.getElementById('nextBtn');
+  const infoText = document.getElementById('infoText');
+
+  const searchInput = document.getElementById('search');
+  const perPageSel = document.getElementById('perPage');
+  const sortSel = document.getElementById('sort');
+  const reloadBtn = document.getElementById('reload');
+
+  // Fetch data from API
+  async function fetchCourses(){
+    showLoading();
+    try {
+      const res = await fetch('http://localhost:4000/api/courses', { method: 'GET' });
+      if (!res.ok) throw new Error('Server returned ' + res.status);
+      const json = await res.json();
+      // adapt to your API shape
+      allCourses = (json && json.data && Array.isArray(json.data.courses)) ? json.data.courses : (Array.isArray(json) ? json : []);
+      // normalize: ensure price and title exist
+      allCourses = allCourses.map(c => ({
+        _id: c._id,
+        title: c.title || 'Untitled Course',
+        price: (typeof c.price === 'number') ? c.price : (c.price ? Number(c.price) : null)
+      }));
+      currentPage = 1;
+      applyFilters();
+    } catch (err){
+      loadingEl.innerText = 'Error loading courses: ' + (err.message || '');
+      console.error(err);
+    }
+  }
+
+  function showLoading(){
+    loadingEl.style.display = 'block';
+    appEl.style.display = 'none';
+    noRes.style.display = 'none';
+  }
+
+  function hideLoading(){
+    loadingEl.style.display = 'none';
+    appEl.style.display = 'block';
+  }
+
+  // Filtering & sorting
+  function applyFilters(){
+    const q = searchInput.value.trim().toLowerCase();
+    const sortMode = sortSel.value;
+    perPage = Number(perPageSel.value) || 8;
+
+    filtered = allCourses.filter(c => c.title.toLowerCase().includes(q));
+    // sort
+    if (sortMode === 'price-low') filtered.sort((a,b) => (a.price||0) - (b.price||0));
+    else if (sortMode === 'price-high') filtered.sort((a,b) => (b.price||0) - (a.price||0));
+    else filtered.sort((a,b) => {
+      // newest based on id timestamp if possible; fallback to insertion order
+      // ObjectId: first 4 bytes = timestamp, but since IDs are strings we approximate:
+      return (b._id || '').localeCompare(a._id || '');
+    });
+
+    // if current page out of range, clamp
+    const pages = Math.max(1, Math.ceil(filtered.length / perPage));
+    if (currentPage > pages) currentPage = pages;
+
+    renderPage();
+  }
+
+  // Render current page
+  function renderPage(){
+    hideLoading();
+    grid.innerHTML = '';
+    pagesContainer.innerHTML = '';
+
+    if (!filtered.length){
+      appEl.style.display = 'none';
+      noRes.style.display = 'block';
+      infoText.innerText = '';
+      return;
+    }
+
+    const total = filtered.length;
+    const pages = Math.max(1, Math.ceil(total / perPage));
+    const start = (currentPage - 1) * perPage;
+    const end = Math.min(total, start + perPage);
+    const pageItems = filtered.slice(start, end);
+
+    pageItems.forEach(course => {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.innerHTML = `
+        <div class="title">${escapeHtml(course.title)}</div>
+        <div class="price">${course.price !== null ? '$' + course.price : '<span style="color:var(--muted)">No Price</span>'}</div>
+        <div class="meta"><strong>ID:</strong> ${escapeHtml(course._id)}</div>
+      `;
+      grid.appendChild(card);
+    });
+
+    // pager buttons: show a window of page numbers
+    const maxButtons = 7;
+    let startPage = Math.max(1, currentPage - Math.floor(maxButtons/2));
+    let endPage = Math.min(pages, startPage + maxButtons - 1);
+    if (endPage - startPage < maxButtons - 1) startPage = Math.max(1, endPage - maxButtons + 1);
+
+    for (let i = startPage; i <= endPage; i++){
+      const btn = document.createElement('button');
+      btn.className = 'page-num btn';
+      btn.textContent = i;
+      if (i === currentPage){
+        btn.classList.add('primary');
+        btn.style.background = 'var(--primary)';
+        btn.style.color = '#fff';
+      }
+      btn.onclick = () => { if (i !== currentPage) { currentPage = i; renderPage(); window.scrollTo({top:0,behavior:'smooth'}) } };
+      pagesContainer.appendChild(btn);
+    }
+
+    prevBtn.disabled = currentPage <= 1;
+    nextBtn.disabled = currentPage >= pages;
+
+    prevBtn.onclick = () => { if (currentPage > 1) { currentPage--; renderPage(); window.scrollTo({top:0,behavior:'smooth'}) } };
+    nextBtn.onclick = () => { if (currentPage < pages) { currentPage++; renderPage(); window.scrollTo({top:0,behavior:'smooth'}) } };
+
+    infoText.innerText = `Showing ${start + 1}–${end} of ${total} courses • Page ${currentPage} of ${pages}`;
+    appEl.style.display = 'block';
+    noRes.style.display = 'none';
+  }
+
+  // small helper to avoid XSS when injecting text
+  function escapeHtml(s){
+    return String(s || '').replace(/[&<>"']/g, function(m){ return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]) });
+  }
+
+  // events
+  searchInput.addEventListener('input', () => { currentPage = 1; applyFilters(); });
+  perPageSel.addEventListener('change', () => { currentPage = 1; applyFilters(); });
+  sortSel.addEventListener('change', () => { currentPage = 1; applyFilters(); });
+  reloadBtn.addEventListener('click', fetchCourses);
+
+  // initial fetch
+  fetchCourses();
+
+})();
+</script>
+</body>
+</html>
