@@ -1,7 +1,9 @@
 //const {validationResult} = require('express-validator')
 const User = require('../Models/user.model');
 const httpStatus = require('../utils/httpStatus');
+const GenerateJWT = require('../utils/GenerateJWT')
 const bcrypt = require("bcryptjs");
+const jwt = require('jsonwebtoken');
 
 
 const getAllUsers = async(req, res)=>{
@@ -22,22 +24,41 @@ const getAllUsers = async(req, res)=>{
 
 
 const register= async(req, res)=>{
-        const {firstName, lastName, email, password} = req.body;
-        const oldUser = await User.findOne({email: email});
-        if(oldUser){
-            return res.status(400).json({status : httpStatus.ERROR, message : "User Already exists"})
-        }
-        //hashing for password
-        const hasedPassword= await bcrypt.hash(password, 10);
+    const {firstName, lastName, email, password} = req.body;
+    const oldUser = await User.findOne({email: email});
+    if(oldUser){
+        return res.status(400).json({status : httpStatus.ERROR, message : "User Already exists"})
+    }
+    //hashing for password
+    const hasedPassword= await bcrypt.hash(password, 10);
 
-        const newuser = new User({firstName, lastName, email, password: hasedPassword});
-        await newuser.save();
-        res.status(201).json({status:httpStatus.SUCCESS, data :{user: newuser}});
+    const newuser = new User({firstName, lastName, email, password: hasedPassword});
+    //generate jwt
+    const token = await GenerateJWT({email: newuser.email, id: newuser._id})
+    newuser.token = token;
+    await newuser.save();
+    res.status(201).json({status:httpStatus.SUCCESS, data :{user: newuser}});
 }
 
-const login =()=>{
-
+const login =async (req, res)=>{
+    const {email, password} = req.body;
+    //check for Email and password
+    if(!email && !password){
+        return res.status(404).json({status : httpStatus.ERROR, message : "User Not Found"})
+    }
+    const user = await User.findOne({email: email});
+    if(!user){
+        return res.status(404).json({status : httpStatus.ERROR, message : "User Not Found"})
+    }
+    matchPassword = await bcrypt.compare(password, user.password);
+    if(!user || !matchPassword){
+        return res.status(500).json({status : httpStatus.ERROR, message : "SomeThink wrong"});
+    }else{
+        const token = await GenerateJWT({email: user.email, id: user._id})
+        res.status(200).json({status:httpStatus.SUCCESS, data :token});
+    }
 }
+
 module.exports = {
     getAllUsers,
     register,

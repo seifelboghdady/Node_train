@@ -1,6 +1,7 @@
 const {Router}= require('express');
 const router = Router();
-const usersController = require('../Controls/users.controller')
+const usersController = require('../Controls/users.controller');
+const { verifyToken } = require('../middleware/verifyToken.middleware');
 
 
 
@@ -9,7 +10,7 @@ const usersController = require('../Controls/users.controller')
 // login
 
 router.route('/')
-    .get(usersController.getAllUsers)
+    .get(verifyToken, usersController.getAllUsers)
 router.route('/register')
     .post(usersController.register)
 router.route('/login')
