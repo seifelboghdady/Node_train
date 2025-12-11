@@ -24,7 +24,7 @@ const getAllUsers = async(req, res)=>{
 
 
 const register= async(req, res)=>{
-    const {firstName, lastName, email, password} = req.body;
+    const {firstName, lastName, email, password, role} = req.body;
     const oldUser = await User.findOne({email: email});
     if(oldUser){
         return res.status(400).json({status : httpStatus.ERROR, message : "User Already exists"})
@@ -32,7 +32,7 @@ const register= async(req, res)=>{
     //hashing for password
     const hasedPassword= await bcrypt.hash(password, 10);
 
-    const newuser = new User({firstName, lastName, email, password: hasedPassword});
+    const newuser = new User({firstName, lastName, email, password: hasedPassword, role});
     //generate jwt
     const token = await GenerateJWT({email: newuser.email, id: newuser._id})
     newuser.token = token;
