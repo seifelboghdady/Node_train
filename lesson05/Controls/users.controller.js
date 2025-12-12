@@ -34,7 +34,7 @@ const register= async(req, res)=>{
 
     const newuser = new User({firstName, lastName, email, password: hasedPassword, role});
     //generate jwt
-    const token = await GenerateJWT({email: newuser.email, id: newuser._id})
+    const token = await GenerateJWT({email: newuser.email, id: newuser._id, role: newuser.role})
     newuser.token = token;
     await newuser.save();
     res.status(201).json({status:httpStatus.SUCCESS, data :{user: newuser}});
@@ -54,7 +54,7 @@ const login =async (req, res)=>{
     if(!user || !matchPassword){
         return res.status(500).json({status : httpStatus.ERROR, message : "SomeThink wrong"});
     }else{
-        const token = await GenerateJWT({email: user.email, id: user._id})
+        const token = await GenerateJWT({email: user.email, id: user._id, role: user.role})
         res.status(200).json({status:httpStatus.SUCCESS, data :token});
     }
 }

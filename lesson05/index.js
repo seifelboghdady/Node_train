@@ -4,6 +4,7 @@
 const mongoose = require('mongoose');
 const express = require('express');
 require('dotenv').config()
+const path = require('path')
 const cors = require('cors')
 const app = express();
 app.use(cors())
@@ -13,7 +14,7 @@ app.use('/api/courses',router);
 const userRouter = require('./Routes/user.routes')
 app.use('/api/users',userRouter);
 
-
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')))
 const url = process.env.MONGO_URL ;
 mongoose.connect(url).then(console.log('Mongoose is Started'));
 

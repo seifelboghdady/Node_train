@@ -8,7 +8,8 @@ const verifyToken = (req, res, next)=>{
     const token = authHeader.split(' ')[1];
     try{
         const decodedToken = jwt.verify(token, process.env.JWT_SECRET_KEY);
-        console.log(decodedToken);
+        //console.log(decodedToken);
+        req.decodedToken = decodedToken;
         next();
     }
     catch(err){

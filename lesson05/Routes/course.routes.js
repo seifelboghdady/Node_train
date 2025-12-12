@@ -2,12 +2,13 @@ const {body} = require('express-validator');
 const courseControler = require('../Controls/index.controler')
 const {Router}= require('express');
 const {verifyToken} = require('../middleware/verifyToken.middleware');
+const allowedTo = require('../middleware/allowedTo')
 const router = Router();
 
 
 router.route('/')
     .get(courseControler.getCourses )
-    .post(verifyToken,[
+    .post(verifyToken,allowedTo("MANGER"),[
             body('title')
                 .notEmpty()
                 .withMessage('Title is Required')
@@ -21,7 +22,7 @@ router.route('/')
 router.route('/:courseid')
     .get(courseControler.getCourse)
     .patch(courseControler.updateCourse)
-    .delete(courseControler.deleteCourse);
+    .delete(verifyToken, allowedTo('ADMIN', 'MANGER'),courseControler.deleteCourse);
 // this is validaton with express validator 
 
 
