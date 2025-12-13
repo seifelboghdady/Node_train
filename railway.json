@@ -4,7 +4,8 @@
     "buildCommand": "npm install"
   },
   "deploy": {
-    "startCommand": "node index.js"
-  },
-  "source": "lesson05"
+    "startCommand": "node index.js",
+    "projectPath": "lesson5"
+  }
+
 }
