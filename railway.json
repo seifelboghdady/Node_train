@@ -5,7 +5,7 @@
   },
   "deploy": {
     "startCommand": "node index.js",
-    "projectPath": "lesson5"
+    "projectPath": "lesson05"
   }
 
 }
